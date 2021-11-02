@@ -43,6 +43,7 @@ public class Home extends AppCompatActivity {
     com.devpj.rajgharana.adapter.productsAdapter productsAdapter;
     List<Products> allproducts;
     EditText searchbar;
+    List<Products> products;
 
 
     HashMap hashMap;
@@ -55,6 +56,7 @@ public class Home extends AppCompatActivity {
         Call<List<Bill>> getallbills=apiInterface.getallongoingbills();
         productsrecycler=findViewById(R.id.productsarea);
         searchbar=findViewById(R.id.txtsearch);
+        Toast.makeText(this, "Loading data...", Toast.LENGTH_SHORT).show();
         searchbar.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -63,22 +65,24 @@ public class Home extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                ArrayList<Products> myList = new ArrayList<>();
-                for(Products object: allproducts){
-                    if (object.getName().toLowerCase().contains(s.toString())){
-
-                        myList.add(object);
-                    }
-                }
-
-                productsAdapter adapterM = new productsAdapter(myList,Home.this::onsaveClick,Home.this);
-
-                productsrecycler.setAdapter(adapterM);
+//                ArrayList<Products> myList = new ArrayList<>();
+//                for(Products object: allproducts){
+//                    if (object.getName().toLowerCase().contains(s.toString())){
+//
+//                        myList.add(object);
+//                    }
+//                }
+//
+//                productsAdapter adapterM = new productsAdapter(myList,Home.this::onsaveClick,Home.this);
+//
+//                productsrecycler.setAdapter(adapterM);
 
             }
 
             @Override
             public void afterTextChanged(Editable s) {
+
+                filter(s.toString());
 
             }
         });
@@ -119,6 +123,7 @@ public class Home extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<Products>> call, Response<List<Products>> response) {
                 if(response.isSuccessful()){
+                    products=response.body();
 
                     layoutManager=new GridLayoutManager(Home.this,1);
                     productsrecycler.setLayoutManager(layoutManager);
@@ -126,7 +131,7 @@ public class Home extends AppCompatActivity {
                     allproducts=response.body();
                     productsAdapter=new productsAdapter(allproducts,Home.this::onsaveClick,Home.this);
                     productsrecycler.setAdapter(productsAdapter);
-                    productsrecycler.setHasFixedSize(true);
+                    productsrecycler.setHasFixedSize(false);
 
 
 
@@ -145,9 +150,24 @@ public class Home extends AppCompatActivity {
 
     }
 
-    private void onsaveClick(int i,int quantity) {
-        Products p=allproducts.get(i);
-        String productid=p.getId().toString();
+
+    private void filter(String s){
+        List<Products> filteredlist=new ArrayList<>();
+        for(Products p:products){
+            if(p.getName().toLowerCase().contains(s.toLowerCase())){
+                filteredlist.add(p);
+            }
+        }
+        productsAdapter.filterList(filteredlist);
+    }
+
+    private void onsaveClick(int i,int quantity,String pid,String rate) {
+
+
+        if(spinner.getCount()==0){
+            Toast.makeText(Home.this, "No tables selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
         String selected=spinner.getSelectedItem().toString();
 
        String billid= hashMap.get(selected).toString();
@@ -156,9 +176,9 @@ public class Home extends AppCompatActivity {
         JSONObject json = new JSONObject();
         try {
             json.put("billid", billid);
-            json.put("productid", productid);
+            json.put("productid", pid);
             json.put("quantity",quantity+"");
-            json.put("rate", p.getPrice()+"");
+            json.put("rate", rate+"");
            // JsonObject jsonObject = (JsonObject) new JsonParser().parse(json);
             JsonParser jsonParser = new JsonParser();
             Call<AddToBillResponse> addtobill=apiInterface.addtobill((JsonObject) jsonParser.parse(json.toString()));

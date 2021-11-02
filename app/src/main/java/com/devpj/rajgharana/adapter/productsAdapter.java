@@ -48,7 +48,9 @@ public class productsAdapter extends RecyclerView.Adapter<productsAdapter.Myview
 
         Products p = allproducts.get(position);
         holder.name.setText(p.getName());
-        holder.rate.setText("Nrs "+p.getPrice());
+        holder.rate.setText(p.getPrice()+"");
+        holder.pid.setText(p.getId()+"");
+
 
     }
 
@@ -59,7 +61,7 @@ public class productsAdapter extends RecyclerView.Adapter<productsAdapter.Myview
 
     public class MyviewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        TextView name,rate;
+        TextView name,rate,pid;
         EditText quantity;
         ImageButton save;
         onaddTobillListener onaddTobillListener;
@@ -70,6 +72,7 @@ public class productsAdapter extends RecyclerView.Adapter<productsAdapter.Myview
             quantity=itemView.findViewById(R.id.txtquantity);
             save=itemView.findViewById(R.id.savebutton);
             rate=itemView.findViewById(R.id.labelrate);
+            pid=itemView.findViewById(R.id.pid);
            save.setOnClickListener(this);
            this.onaddTobillListener=onaddTobillListener;
 
@@ -82,12 +85,17 @@ public class productsAdapter extends RecyclerView.Adapter<productsAdapter.Myview
                 Toast.makeText(context, "Quantity is required", Toast.LENGTH_SHORT).show();
                 return;
             }
-            onaddTobillListener.onAddtobillClick(getAdapterPosition(),Integer.parseInt(quantity.getText().toString()));
+            onaddTobillListener.onAddtobillClick(getAdapterPosition(),Integer.parseInt(quantity.getText().toString()),pid.getText().toString(),rate.getText().toString());
         }
     }
 
     public interface onaddTobillListener {
-         void onAddtobillClick(int position,int quantity);
+         void onAddtobillClick(int position,int quantity,String pid,String rate);
+    }
+
+    public void filterList(List<Products> newlist){
+        allproducts=newlist;
+        notifyDataSetChanged();
     }
 
 }
